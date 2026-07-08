@@ -1,0 +1,152 @@
+schema_version: "0.3"
+
+recipe:
+  id: "poe1_mirage_large_cluster_alt_regal"
+  name: "Large Cluster Jewel Alt-Regal Notables"
+  game: "poe1"
+  league_scope:
+    default_league: "Mirage"
+    compatible_with_other_leagues: true
+  status: "draft"
+  sources:
+    - title: "PoEStash Cluster Craft"
+      url: "https://www.poestash.com/poe1/cluster-craft"
+      note: "Research seed: alt-spam target notable, regal second notable, optional exalt for large clusters. Values are draft estimates."
+    - title: "Craft of Exile"
+      url: "https://www.craftofexile.com/"
+      note: "Use later for mod-weight validation and simulation."
+
+target:
+  base:
+    item_class: "Jewel"
+    base_type: "Large Cluster Jewel"
+    item_level_min: 84
+    influences: []
+    corrupted: false
+
+  implicits:
+    required: []
+
+  affixes:
+    required:
+      - id: "large_cluster_8_passives"
+        text: "Adds 8 Passive Skills"
+      - id: "two_or_three_good_notables"
+        text: "Two or three desirable build-specific notables"
+    any_of:
+      - group_id: "popular_attack_notables"
+        min_required: 2
+        options:
+          - id: "feed_the_fury"
+            text: "Feed the Fury"
+          - id: "fuel_the_fight"
+            text: "Fuel the Fight"
+          - id: "martial_prowess"
+            text: "Martial Prowess"
+
+pricing:
+  base_currency: "chaos"
+  price_sources:
+    - "manual_override"
+    - "local_cache"
+    - "poe_ninja"
+    - "recipe_fallback"
+  output:
+    mode: "manual_estimate"
+    estimated_sale_price_chaos: 450
+    failed_resale_value_chaos: 25
+    confidence: "draft_research_seed"
+    source: "recipe_import"
+    note: "Draft seed based on cluster jewel crafting method; exact notable combo should later be priced by trade search."
+
+ingredients:
+  - id: "large_cluster_jewel_base"
+    type: "base_item"
+    price_lookup: true
+    quantity: 1
+    market_name: "Large Cluster Jewel"
+    market_type: "ClusterJewel"
+    pricing_note: "poe.ninja ClusterJewel data may not reflect item level, passive count or enchant; fallback is used if no exact match exists."
+    fallback_unit_price_chaos: 20
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_pricing_note: "Fallback for an ilvl 84 8-passive large cluster base."
+    fallback_price_source: "recipe_pack"
+
+  - id: "orb_of_alteration"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 250
+    market_name: "Orb of Alteration"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 0.05
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "orb_of_augmentation"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 80
+    market_name: "Orb of Augmentation"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 0.08
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "regal_orb"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 12
+    market_name: "Regal Orb"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 1
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "orb_of_scouring"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 8
+    market_name: "Orb of Scouring"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 0.5
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "exalted_orb"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 1
+    market_name: "Exalted Orb"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 15
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+crafting_flow:
+  checkpoints:
+    - id: "magic_target_notable"
+    - id: "rare_two_notables"
+    - id: "finished_large_cluster"
+  steps:
+    - id: "buy_large_cluster_base"
+      type: "base_preparation"
+    - id: "alt_spam_target_notable"
+      type: "mod_search"
+    - id: "augment_if_needed"
+      type: "mod_completion"
+    - id: "regal_second_notable"
+      type: "regal_gamble"
+    - id: "optional_exalt_third_notable"
+      type: "exalted_gamble"
+
+assumptions: []
+
+simulation:
+  mode: "expected_value"
+  include_failed_vaal_resale: false
+  default_monte_carlo_attempts: 10000

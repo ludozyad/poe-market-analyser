@@ -1,0 +1,120 @@
+# POE Market Analyser - Project state
+
+## Current scope
+
+Desktop-oriented Python MVP core for Path of Exile 1 market/crafting profitability analysis.
+
+Current default target:
+
+- Game: Path of Exile 1
+- League: Mirage
+- IDE: PyCharm
+- Runtime: Python 3.11+
+- Storage: SQLite
+- Recipe import: YAML schema `0.3`
+- Market source: poe.ninja adapter
+
+## Implemented workflow
+
+The main hands-off command is:
+
+```powershell
+python -m poe_market_analyser.cli auto-rank --recipe-dir data\recipes --league Mirage --db poe_market.db --show-problems
+```
+
+It performs:
+
+1. Import all YAML recipes from `data/recipes`.
+2. Detect required market types from recipe ingredients.
+3. Refresh required poe.ninja market snapshots.
+4. Resolve ingredient prices from manual overrides, local cache, poe.ninja data, or recipe fallbacks.
+5. Calculate one-attempt cost, expected cost, estimated sale price, profit and ROI.
+6. Rank recipes and show data quality confidence.
+
+## Implemented modules
+
+- `domain.models` - crafting recipe model, ingredients, target item, assumptions, output pricing.
+- `domain.market` - market snapshot and price abstractions.
+- `domain.pricing` - resolved price book and missing price model.
+- `infrastructure.importers.yaml_recipe_importer` - YAML -> domain model importer.
+- `infrastructure.market.poe_ninja_provider` - poe.ninja market adapter.
+- `infrastructure.storage.sqlite_recipe_repository` - recipe persistence.
+- `infrastructure.storage.sqlite_market_repository` - market snapshots and manual price overrides.
+- `application.price_resolver` - ingredient -> market cache/fallback resolution.
+- `application.profit_engine` - simple expected-value profit engine.
+- `application.output_pricing` - recipe-level output price estimates.
+- `application.recipe_ranking_service` - automatic recipe ranking.
+- `application.auto_analysis_service` - import + refresh + rank orchestration.
+- `application.recipe_quality` - confidence score and quality flags.
+
+## Recipe pack
+
+Current recipe files:
+
+- `poe1_mirage_viper_touch_spiked_gloves_recipe_cleaned.yaml`
+- `poe1_mirage_large_cluster_alt_regal_recipe.yaml`
+- `poe1_mirage_fractured_spell_suppression_boots_essence_recipe.yaml`
+- `poe1_mirage_amethyst_ring_chaos_res_essence_recipe.yaml`
+- `poe1_mirage_eldritch_attack_speed_gloves_essence_recipe.yaml`
+- `poe1_mirage_medium_cluster_flask_alt_regal_recipe.yaml`
+
+All non-user-supplied extra recipes are draft research seeds. They are useful for testing automated ranking, but output price estimates and expected quantities should be replaced later by trade-search and mod-weight based data.
+
+## Useful commands
+
+Install/update dependencies:
+
+```powershell
+python -m pip install -e ".[dev]"
+```
+
+Run tests:
+
+```powershell
+python -m pytest
+```
+
+Import all recipes:
+
+```powershell
+python -m poe_market_analyser.cli import-dir data\recipes --db poe_market.db
+```
+
+Fetch required market types only:
+
+```powershell
+python -m poe_market_analyser.cli market-fetch-required --league Mirage --db poe_market.db
+```
+
+Auto-rank all recipes:
+
+```powershell
+python -m poe_market_analyser.cli auto-rank --recipe-dir data\recipes --league Mirage --db poe_market.db --show-problems
+```
+
+Export CSV ranking:
+
+```powershell
+python -m poe_market_analyser.cli auto-rank --recipe-dir data\recipes --league Mirage --db poe_market.db --export-csv exports\ranking.csv
+```
+
+Filter by confidence:
+
+```powershell
+python -m poe_market_analyser.cli auto-rank --skip-import --league Mirage --db poe_market.db --min-confidence-score 70
+```
+
+## Missing / next major elements
+
+1. Exact output item pricing using trade search or a user-supplied snapshot.
+2. Better base item pricing for rare/fractured/influenced bases.
+3. Mod/stat IDs instead of text-only target mods.
+4. More recipes with better assumptions and sources.
+5. Checkpoint-level simulation and salvage values.
+6. GUI in PySide6.
+7. Configuration screen for league/source selection.
+8. PoE2 support after PoE1 workflow stabilizes.
+
+## Current known limitation
+
+Profit ranking depends heavily on `pricing.output.estimated_sale_price_chaos` in YAML. Until exact trade pricing is implemented, ranking should be treated as a draft opportunity scanner, not a final buy/craft recommendation.

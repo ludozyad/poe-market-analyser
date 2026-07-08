@@ -1,0 +1,141 @@
+schema_version: "0.3"
+
+recipe:
+  id: "poe1_mirage_fractured_spell_suppression_boots_essence"
+  name: "Fractured Spell Suppression Boots - Essence Finish"
+  game: "poe1"
+  league_scope:
+    default_league: "Mirage"
+    compatible_with_other_leagues: true
+  status: "draft"
+  sources:
+    - title: "Path of Exile forum - basic crafting help"
+      url: "https://www.pathofexile.com/forum/view-thread/3490002"
+      note: "Research seed: start with fractured spell suppression, then use essences for desired life/movement speed path."
+    - title: "PoE Wiki - Fractured item"
+      url: "https://www.poewiki.net/wiki/Fractured_item"
+      note: "Fractured mods are permanent and cannot be removed by annul/scour."
+
+target:
+  base:
+    item_class: "Boots"
+    base_type: "Slink Boots"
+    item_level_min: 86
+    influences: []
+    corrupted: false
+
+  implicits:
+    required: []
+
+  affixes:
+    required:
+      - id: "fractured_t1_spell_suppression"
+        text: "Fractured high tier chance to Suppress Spell Damage"
+      - id: "high_life"
+        text: "+# to maximum Life"
+      - id: "movement_speed"
+        text: "25-35% increased Movement Speed"
+    any_of:
+      - group_id: "useful_suffixes"
+        min_required: 1
+        options:
+          - id: "elemental_resistance"
+            text: "+#% to Elemental Resistance"
+          - id: "chaos_resistance"
+            text: "+#% to Chaos Resistance"
+
+pricing:
+  base_currency: "chaos"
+  price_sources:
+    - "manual_override"
+    - "local_cache"
+    - "poe_ninja"
+    - "recipe_fallback"
+  output:
+    mode: "manual_estimate"
+    estimated_sale_price_chaos: 1200
+    failed_resale_value_chaos: 120
+    confidence: "draft_research_seed"
+    source: "recipe_import"
+    note: "Draft estimate for sellable fractured suppression boots; exact output should later be priced by mod-based trade search."
+
+ingredients:
+  - id: "fractured_suppression_boots_base"
+    type: "base_item"
+    price_lookup: true
+    quantity: 1
+    market_name: "Slink Boots"
+    market_type: "BaseType"
+    pricing_note: "poe.ninja BaseType does not know the fractured spell suppression mod; recipe fallback represents a checked base estimate."
+    fallback_unit_price_chaos: 180
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_pricing_note: "Fallback for ilvl 86 fractured spell suppression evasion boot base."
+    fallback_price_source: "recipe_pack"
+    prefer_recipe_fallback: true
+
+  - id: "deafening_essence_of_greed"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 25
+    market_name: "Deafening Essence of Greed"
+    market_type: "Essence"
+    pricing_note: "Expected essence count until usable movement speed/resistance combination."
+    fallback_unit_price_chaos: 4
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "eldritch_chaos_orb"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 2
+    market_name: "Eldritch Chaos Orb"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 8
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "exalted_orb"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 2
+    market_name: "Exalted Orb"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 15
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "benchcraft_life_or_movement_speed_divine_cost"
+    type: "benchcraft_cost"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 0.25
+    market_name: "Divine Orb"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 539
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+crafting_flow:
+  checkpoints:
+    - id: "fractured_base"
+    - id: "essence_hit"
+    - id: "finished_boots"
+  steps:
+    - id: "buy_fractured_suppression_base"
+      type: "base_preparation"
+    - id: "essence_spam_life_until_movespeed_or_res"
+      type: "essence_spam"
+    - id: "eldritch_refine_prefixes_or_suffixes"
+      type: "eldritch_cleanup"
+    - id: "benchcraft_missing_stat"
+      type: "benchcraft_finish"
+
+assumptions: []
+
+simulation:
+  mode: "expected_value"
+  include_failed_vaal_resale: false
+  default_monte_carlo_attempts: 10000

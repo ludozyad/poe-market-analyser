@@ -1,0 +1,157 @@
+schema_version: "0.3"
+
+recipe:
+  id: "poe1_mirage_eldritch_attack_speed_gloves_essence"
+  name: "Eldritch Attack Speed Gloves - Essence Finish"
+  game: "poe1"
+  league_scope:
+    default_league: "Mirage"
+    compatible_with_other_leagues: true
+  status: "draft"
+  sources:
+    - title: "PoE Wiki - Essence"
+      url: "https://www.poewiki.net/wiki/Essence"
+      note: "Essences reforge equipment and apply one guaranteed affix."
+    - title: "PoE Wiki - Eldritch implicit modifier"
+      url: "https://www.poewiki.net/wiki/Eldritch_implicit_modifier"
+      note: "Eldritch implicits can appear on non-influenced gloves, boots, helmets and body armours."
+    - title: "Craft of Exile"
+      url: "https://www.craftofexile.com/"
+      note: "Future source for replacing expected quantities with mod-weight based simulation."
+
+target:
+  base:
+    item_class: "Gloves"
+    base_type: "Slink Gloves"
+    item_level_min: 84
+    influences: []
+    corrupted: false
+
+  implicits:
+    required:
+      - id: "eldritch_attack_implicit"
+        text: "Useful Eldritch attack implicit"
+      - id: "eldritch_defensive_implicit"
+        text: "Useful Eldritch defensive implicit"
+
+  affixes:
+    required:
+      - id: "essence_attack_speed"
+        text: "High increased Attack Speed"
+      - id: "life"
+        text: "+# to maximum Life"
+    any_of:
+      - group_id: "sellable_suffixes"
+        min_required: 1
+        options:
+          - id: "elemental_resistance"
+            text: "+#% to Elemental Resistance"
+          - id: "chaos_resistance"
+            text: "+#% to Chaos Resistance"
+          - id: "accuracy_or_attributes"
+            text: "Useful accuracy or attribute suffix"
+
+pricing:
+  base_currency: "chaos"
+  price_sources:
+    - "manual_override"
+    - "local_cache"
+    - "poe_ninja"
+    - "recipe_fallback"
+  output:
+    mode: "manual_estimate"
+    estimated_sale_price_chaos: 700
+    failed_resale_value_chaos: 80
+    confidence: "draft_research_seed"
+    source: "recipe_import"
+    note: "Draft estimate for generic sellable eldritch attack speed gloves; exact output should later use mod-based trade search."
+
+ingredients:
+  - id: "non_influenced_gloves_base"
+    type: "base_item"
+    price_lookup: true
+    quantity: 1
+    market_name: "Slink Gloves"
+    market_type: "BaseType"
+    pricing_note: "Generic non-influenced ilvl 84+ base. poe.ninja BaseType may not match exact ilvl/links; fallback is used if needed."
+    fallback_unit_price_chaos: 20
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "deafening_essence_of_zeal"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 18
+    market_name: "Deafening Essence of Zeal"
+    market_type: "Essence"
+    pricing_note: "Essence spam until life plus at least one useful suffix."
+    fallback_unit_price_chaos: 7
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "lesser_eldritch_ember"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 6
+    market_name: "Lesser Eldritch Ember"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 1.5
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "lesser_eldritch_ichor"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 6
+    market_name: "Lesser Eldritch Ichor"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 1.5
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "exalted_orb_finish"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 1
+    market_name: "Exalted Orb"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 15
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "benchcraft_life_or_resistance"
+    type: "benchcraft_cost"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 0.1
+    market_name: "Divine Orb"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 539
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+crafting_flow:
+  checkpoints:
+    - id: "base_ready"
+    - id: "essence_hit"
+    - id: "eldritch_finished"
+  steps:
+    - id: "buy_non_influenced_base"
+      type: "base_preparation"
+    - id: "essence_spam_zeal"
+      type: "essence_spam"
+    - id: "bench_or_exalt_finish"
+      type: "benchcraft_finish"
+    - id: "roll_eldritch_implicits"
+      type: "eldritch_implicit_finish"
+
+assumptions: []
+
+simulation:
+  mode: "expected_value"
+  include_failed_vaal_resale: false
+  default_monte_carlo_attempts: 10000

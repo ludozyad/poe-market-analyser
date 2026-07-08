@@ -1,0 +1,2 @@
+[console_scripts]
+poe-market-analyser = poe_market_analyser.cli:main

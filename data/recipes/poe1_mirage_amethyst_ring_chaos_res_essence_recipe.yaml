@@ -1,0 +1,125 @@
+schema_version: "0.3"
+
+recipe:
+  id: "poe1_mirage_amethyst_ring_chaos_res_essence"
+  name: "Amethyst Ring Chaos Resistance Essence Spam"
+  game: "poe1"
+  league_scope:
+    default_league: "Mirage"
+    compatible_with_other_leagues: true
+  status: "draft"
+  sources:
+    - title: "PoE Wiki - crafting guide"
+      url: "https://www.poewiki.net/wiki/Guide:Crafting"
+      note: "Research seed for simple currency-based rare item crafting."
+    - title: "PoE Wiki - Essence"
+      url: "https://www.poewiki.net/wiki/Essence"
+      note: "Essences are used as deterministic stat-forcing crafting currency."
+
+target:
+  base:
+    item_class: "Ring"
+    base_type: "Amethyst Ring"
+    item_level_min: 84
+    influences: []
+    corrupted: false
+
+  implicits:
+    required:
+      - id: "amethyst_chaos_res_implicit"
+        text: "+#% to Chaos Resistance"
+
+  affixes:
+    required:
+      - id: "essence_chaos_resistance"
+        text: "+#% to Chaos Resistance"
+      - id: "life"
+        text: "+# to maximum Life"
+    any_of:
+      - group_id: "useful_ring_suffixes"
+        min_required: 1
+        options:
+          - id: "elemental_resistance"
+            text: "+#% to Elemental Resistance"
+          - id: "attributes"
+            text: "+# to Attributes"
+          - id: "open_prefix_craft"
+            text: "Open prefix for crafted damage/life"
+
+pricing:
+  base_currency: "chaos"
+  price_sources:
+    - "manual_override"
+    - "local_cache"
+    - "poe_ninja"
+    - "recipe_fallback"
+  output:
+    mode: "manual_estimate"
+    estimated_sale_price_chaos: 260
+    failed_resale_value_chaos: 20
+    confidence: "draft_research_seed"
+    source: "recipe_import"
+    note: "Low-budget draft craft; exact target should later be priced from trade by affix filters."
+
+ingredients:
+  - id: "amethyst_ring_base"
+    type: "base_item"
+    price_lookup: true
+    quantity: 1
+    market_name: "Amethyst Ring"
+    market_type: "BaseType"
+    fallback_unit_price_chaos: 8
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "deafening_essence_of_envy"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 18
+    market_name: "Deafening Essence of Envy"
+    market_type: "Essence"
+    fallback_unit_price_chaos: 3
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "orb_of_scouring"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 3
+    market_name: "Orb of Scouring"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 0.5
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "exalted_orb"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 1
+    market_name: "Exalted Orb"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 15
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+crafting_flow:
+  checkpoints:
+    - id: "chaos_res_base"
+    - id: "sellable_ring"
+  steps:
+    - id: "buy_amethyst_ring_base"
+      type: "base_preparation"
+    - id: "essence_spam_envy_until_life_and_res"
+      type: "essence_spam"
+    - id: "bench_or_exalt_finish"
+      type: "finish"
+
+assumptions: []
+
+simulation:
+  mode: "expected_value"
+  include_failed_vaal_resale: false
+  default_monte_carlo_attempts: 10000

@@ -1,0 +1,104 @@
+schema_version: "0.3"
+
+recipe:
+  id: "poe1_mirage_viper_touch_spiked_gloves"
+  name: "Viper Touch Spiked Gloves"
+  game: "poe1"
+  league_scope:
+    default_league: "Mirage"
+    compatible_with_other_leagues: true
+  status: "draft"
+
+target:
+  base:
+    item_class: "Gloves"
+    base_type: "Spiked Gloves"
+    item_level_min: 86
+    influences:
+      - "Hunter"
+      - "Warlord"
+    corrupted: true
+
+  implicits:
+    required:
+      - id: "spiked_gloves_melee_damage"
+        text: "20% increased Melee Damage"
+      - id: "corrupted_plus_one_frenzy"
+        text: "+1 to Maximum Frenzy Charges"
+
+  affixes:
+    required:
+      - id: "elevated_strike"
+        text: "Non-Vaal Strike Skills target 2 additional nearby Enemies"
+      - id: "explicit_plus_one_frenzy"
+        text: "+1 to Maximum Frenzy Charges"
+      - id: "t1_attack_speed"
+        text: "16% increased Attack Speed"
+
+    any_of:
+      - group_id: "desired_veiled_suffix"
+        min_required: 1
+        options:
+          - id: "global_crit_chance"
+            text: "increased Global Critical Strike Chance"
+          - id: "elemental_damage_if_crit_recently"
+            text: "increased Elemental Damage if you've dealt a Critical Strike Recently"
+
+pricing:
+  base_currency: "divine"
+  price_sources:
+    - "manual_override"
+    - "local_cache"
+    - "poe_ninja"
+
+ingredients:
+  - id: "hunter_spiked_gloves_ilvl86"
+    type: "base_item"
+    price_lookup: true
+
+  - id: "gilded_fossil"
+    type: "currency"
+    price_lookup: true
+
+  - id: "craicic_chimeral"
+    type: "beast"
+    price_lookup: true
+
+crafting_flow:
+  checkpoints:
+    - id: "beast_lock_base"
+    - id: "prefixes_done"
+    - id: "finished_uncorrupted"
+    - id: "finished_corrupted_success"
+
+  steps:
+    - id: "prepare_base"
+      type: "base_preparation"
+
+    - id: "alt_spam_strike"
+      type: "mod_search"
+
+    - id: "elevate_strike"
+      type: "influence_elevation"
+
+    - id: "awakener_loop"
+      type: "branching_loop"
+
+    - id: "finish_suffixes"
+      type: "suffix_targeting"
+
+    - id: "vaal_for_frenzy"
+      type: "corruption_gamble"
+
+assumptions:
+  - id: "vaal_success_chance"
+    value: 0.005952381
+    text: "1/168"
+    confidence: "medium"
+    source: "manual"
+    can_override: true
+
+simulation:
+  mode: "expected_value"
+  include_failed_vaal_resale: true
+  default_monte_carlo_attempts: 10000

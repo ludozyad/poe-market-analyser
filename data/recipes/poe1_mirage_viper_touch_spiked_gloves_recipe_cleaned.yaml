@@ -1,0 +1,242 @@
+schema_version: '0.3'
+recipe:
+  id: poe1_mirage_viper_touch_spiked_gloves
+  name: Viper Touch Spiked Gloves
+  game: poe1
+  league_scope:
+    default_league: Mirage
+    compatible_with_other_leagues: true
+  status: draft
+target:
+  base:
+    item_class: Gloves
+    base_type: Spiked Gloves
+    item_level_min: 86
+    influences:
+    - Hunter
+    - Warlord
+    corrupted: true
+  implicits:
+    required:
+    - id: spiked_gloves_melee_damage
+      text: 20% increased Melee Damage
+    - id: corrupted_plus_one_frenzy
+      text: +1 to Maximum Frenzy Charges
+  affixes:
+    required:
+    - id: elevated_strike
+      text: Non-Vaal Strike Skills target 2 additional nearby Enemies
+    - id: explicit_plus_one_frenzy
+      text: +1 to Maximum Frenzy Charges
+    - id: t1_attack_speed
+      text: 16% increased Attack Speed
+    any_of:
+    - group_id: desired_veiled_suffix
+      min_required: 1
+      options:
+      - id: global_crit_chance
+        text: increased Global Critical Strike Chance
+      - id: elemental_damage_if_crit_recently
+        text: increased Elemental Damage if you've dealt a Critical Strike Recently
+pricing:
+  base_currency: divine
+  price_sources:
+  - manual_override
+  - local_cache
+  - poe_ninja
+  output:
+    mode: manual_estimate
+    estimated_sale_price_chaos: 350000
+    failed_resale_value_chaos: 0
+    confidence: draft_manual
+    source: recipe_import
+    note: Temporary imported estimate for the successful corrupted target item; replace
+      with trade-search pricing when available.
+ingredients:
+- id: hunter_spiked_gloves_ilvl86
+  type: base_item
+  price_lookup: true
+  quantity: 1
+  market_name: Spiked Gloves
+  market_type: BaseType
+  pricing_note: poe.ninja BaseType price will not include Hunter influence or ilvl
+    filtering.
+  fallback_unit_price_chaos: 25.0
+  fallback_price_confidence: checked_recipe_fallback
+  fallback_pricing_note: Fallback for clean ilvl 86 Hunter base; live BaseType data
+    may match expensive influenced finished bases.
+  fallback_price_source: recipe_pack
+  prefer_recipe_fallback: true
+- id: gilded_fossil
+  type: currency
+  price_lookup: true
+  quantity: 1
+  market_name: Gilded Fossil
+  market_type: Fossil
+  fallback_unit_price_chaos: 30.0
+  fallback_price_confidence: draft_recipe_fallback
+  fallback_pricing_note: Fallback from observed Mirage poe.ninja snapshot.
+  fallback_price_source: recipe_pack
+- id: orb_of_alteration
+  type: currency
+  price_lookup: true
+  quantity_mode: expected
+  expected_quantity: 600
+  market_name: Orb of Alteration
+  market_type: Currency
+  pricing_note: Draft expected quantity for alt-spam step; replace with mod-weight
+    calculation later.
+  fallback_unit_price_chaos: 0.05
+  fallback_price_confidence: draft_recipe_fallback
+  fallback_pricing_note: Fallback estimate for low currency if poe.ninja slug matching
+    fails.
+  fallback_price_source: recipe_pack
+- id: regal_orb
+  type: currency
+  price_lookup: true
+  quantity: 1
+  market_name: Regal Orb
+  market_type: Currency
+  fallback_unit_price_chaos: 1.0
+  fallback_price_confidence: draft_recipe_fallback
+  fallback_pricing_note: Fallback estimate for low currency if poe.ninja slug matching
+    fails.
+  fallback_price_source: recipe_pack
+- id: orb_of_annulment
+  type: currency
+  price_lookup: true
+  quantity_mode: expected
+  expected_quantity: 2
+  market_name: Orb of Annulment
+  market_type: Currency
+  pricing_note: Draft expected quantity for cleanup annuls.
+  fallback_unit_price_chaos: 20.0
+  fallback_price_confidence: draft_recipe_fallback
+  fallback_pricing_note: Fallback estimate for low currency if poe.ninja slug matching
+    fails.
+  fallback_price_source: recipe_pack
+- id: orb_of_scouring
+  type: currency
+  price_lookup: true
+  quantity: 1
+  market_name: Orb of Scouring
+  market_type: Currency
+  fallback_unit_price_chaos: 0.5
+  fallback_price_confidence: draft_recipe_fallback
+  fallback_pricing_note: Fallback estimate for low currency if poe.ninja slug matching
+    fails.
+  fallback_price_source: recipe_pack
+- id: orb_of_dominance
+  type: currency
+  price_lookup: true
+  quantity_mode: expected
+  expected_quantity: 2
+  market_name: Maven's Orb
+  market_type: Currency
+  pricing_note: Orb of Dominance is represented by Maven's Orb in poe.ninja data;
+    expected quantity reflects 50/50 elevation.
+  fallback_unit_price_chaos: 3479.0
+  fallback_price_confidence: draft_recipe_fallback
+  fallback_pricing_note: Fallback from observed Mirage poe.ninja Maven's Orb price.
+  fallback_price_source: recipe_pack
+- id: awakeners_orb
+  type: currency
+  price_lookup: true
+  quantity: 1
+  market_name: Awakener's Orb
+  market_type: Currency
+  fallback_unit_price_chaos: 1440.0
+  fallback_price_confidence: draft_recipe_fallback
+  fallback_pricing_note: Fallback from observed Mirage poe.ninja snapshot.
+  fallback_price_source: recipe_pack
+- id: veiled_exalted_orb
+  type: currency
+  price_lookup: true
+  quantity: 1
+  market_name: Veiled Exalted Orb
+  market_type: Currency
+  fallback_unit_price_chaos: 8624.0
+  fallback_price_confidence: draft_recipe_fallback
+  fallback_pricing_note: Fallback from observed Mirage poe.ninja snapshot.
+  fallback_price_source: recipe_pack
+- id: vaal_orb
+  type: currency
+  price_lookup: true
+  quantity: 1
+  market_name: Vaal Orb
+  market_type: Currency
+  fallback_unit_price_chaos: 1.0
+  fallback_price_confidence: draft_recipe_fallback
+  fallback_pricing_note: Fallback estimate for low currency if poe.ninja slug matching
+    fails.
+  fallback_price_source: recipe_pack
+- id: prefixes_cannot_be_changed_divine_cost
+  type: benchcraft_cost
+  price_lookup: true
+  quantity_mode: expected
+  expected_quantity: 10
+  market_name: Divine Orb
+  market_type: Currency
+  pricing_note: Draft total divine cost for repeated Prefixes Cannot Be Changed crafts
+    before one corruption attempt.
+  fallback_unit_price_chaos: 539.0
+  fallback_price_confidence: draft_recipe_fallback
+  fallback_pricing_note: Fallback Divine Orb value from observed Mirage poe.ninja
+    snapshot.
+  fallback_price_source: recipe_pack
+- id: multimod_divine_cost
+  type: benchcraft_cost
+  price_lookup: true
+  quantity: 2
+  market_name: Divine Orb
+  market_type: Currency
+  pricing_note: Benchcraft cost for Can have up to 3 Crafted Modifiers.
+  fallback_unit_price_chaos: 539.0
+  fallback_price_confidence: draft_recipe_fallback
+  fallback_pricing_note: Fallback Divine Orb value from observed Mirage poe.ninja
+    snapshot.
+  fallback_price_source: recipe_pack
+- id: craicic_chimeral
+  type: beast
+  price_lookup: true
+  quantity_mode: expected
+  expected_quantity: 4
+  market_name: Craicic Chimeral
+  market_type: Beast
+  pricing_note: Draft expected quantity for imprint/beast-lock usage before one corruption
+    attempt.
+  fallback_unit_price_chaos: 1617.0
+  fallback_price_confidence: draft_recipe_fallback
+  fallback_pricing_note: Fallback from observed Mirage poe.ninja snapshot.
+  fallback_price_source: recipe_pack
+crafting_flow:
+  checkpoints:
+  - id: beast_lock_base
+  - id: prefixes_done
+  - id: finished_uncorrupted
+  - id: finished_corrupted_success
+  steps:
+  - id: prepare_base
+    type: base_preparation
+  - id: alt_spam_strike
+    type: mod_search
+  - id: elevate_strike
+    type: influence_elevation
+  - id: awakener_loop
+    type: branching_loop
+  - id: finish_suffixes
+    type: suffix_targeting
+  - id: vaal_for_frenzy
+    type: corruption_gamble
+assumptions:
+- id: vaal_success_chance
+  value: 0.005952381
+  text: 1/168
+  confidence: medium
+  source: manual
+  can_override: true
+simulation:
+  mode: expected_value
+  include_failed_vaal_resale: true
+  default_monte_carlo_attempts: 10000
+  primary_success_assumption_id: vaal_success_chance

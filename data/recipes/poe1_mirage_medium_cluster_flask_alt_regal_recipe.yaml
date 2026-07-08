@@ -1,0 +1,142 @@
+schema_version: "0.3"
+
+recipe:
+  id: "poe1_mirage_medium_cluster_flask_alt_regal"
+  name: "Medium Cluster Jewel Flask Alt-Regal"
+  game: "poe1"
+  league_scope:
+    default_league: "Mirage"
+    compatible_with_other_leagues: true
+  status: "draft"
+  sources:
+    - title: "PoE Wiki - Cluster jewel"
+      url: "https://www.poewiki.net/wiki/Cluster_jewel"
+      note: "Cluster jewels add passive clusters and can be crafted to modify properties."
+    - title: "PoE Wiki - Guide:Crafting"
+      url: "https://www.poewiki.net/wiki/Guide:Crafting"
+      note: "Alt/regal is a common basic currency crafting path."
+    - title: "PoEStash - Cluster Jewel Calculator"
+      url: "https://www.poestash.com/poe1/cluster-craft"
+      note: "Research seed for cluster profit analysis and future per-combo odds."
+
+target:
+  base:
+    item_class: "Jewel"
+    base_type: "Medium Cluster Jewel"
+    item_level_min: 68
+    influences: []
+    corrupted: false
+
+  implicits:
+    required:
+      - id: "flask_duration_enchant"
+        text: "Added Small Passive Skills grant increased Flask Duration"
+
+  affixes:
+    required:
+      - id: "first_flask_notable"
+        text: "One valuable flask notable"
+    any_of:
+      - group_id: "second_flask_notable"
+        min_required: 1
+        options:
+          - id: "spiked_concoction"
+            text: "Spiked Concoction"
+          - id: "fasting"
+            text: "Fasting"
+          - id: "distilled_perfection"
+            text: "Distilled Perfection"
+
+pricing:
+  base_currency: "chaos"
+  price_sources:
+    - "manual_override"
+    - "local_cache"
+    - "poe_ninja"
+    - "recipe_fallback"
+  output:
+    mode: "manual_estimate"
+    estimated_sale_price_chaos: 320
+    failed_resale_value_chaos: 20
+    confidence: "draft_research_seed"
+    source: "recipe_import"
+    note: "Draft estimate for sellable two-notable flask medium cluster; exact notables should later be priced per combo."
+
+ingredients:
+  - id: "medium_flask_cluster_base"
+    type: "base_item"
+    price_lookup: true
+    quantity: 1
+    market_name: "Medium Cluster Jewel"
+    market_type: "ClusterJewel"
+    pricing_note: "poe.ninja ClusterJewel may aggregate multiple enchant types; fallback represents flask-duration base seed."
+    fallback_unit_price_chaos: 35
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+    prefer_recipe_fallback: true
+
+  - id: "orb_of_alteration"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 150
+    market_name: "Orb of Alteration"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 0.05
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "orb_of_augmentation"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 45
+    market_name: "Orb of Augmentation"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 0.08
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "regal_orb"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 1.5
+    market_name: "Regal Orb"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 1
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+  - id: "orb_of_scouring"
+    type: "currency"
+    price_lookup: true
+    quantity_mode: "expected"
+    expected_quantity: 8
+    market_name: "Orb of Scouring"
+    market_type: "Currency"
+    fallback_unit_price_chaos: 0.5
+    fallback_price_confidence: "draft_recipe_fallback"
+    fallback_price_source: "recipe_pack"
+
+crafting_flow:
+  checkpoints:
+    - id: "magic_target_notable"
+    - id: "regal_success"
+    - id: "finished_cluster"
+  steps:
+    - id: "buy_flask_medium_cluster"
+      type: "base_preparation"
+    - id: "alt_aug_until_first_notable"
+      type: "mod_search"
+    - id: "regal_for_second_notable"
+      type: "regal_finish"
+    - id: "sell_or_scour_failed_regal"
+      type: "salvage_or_retry"
+
+assumptions: []
+
+simulation:
+  mode: "expected_value"
+  include_failed_vaal_resale: false
+  default_monte_carlo_attempts: 10000

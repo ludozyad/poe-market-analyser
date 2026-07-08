@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: poe-market-analyser
+Version: 0.1.0
+Summary: MVP core for Path of Exile 1 crafting market analysis.
+Requires-Python: >=3.11
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: requests>=2.31
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
