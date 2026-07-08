@@ -118,3 +118,20 @@ python -m poe_market_analyser.cli auto-rank --skip-import --league Mirage --db p
 ## Current known limitation
 
 Profit ranking depends heavily on `pricing.output.estimated_sale_price_chaos` in YAML. Until exact trade pricing is implemented, ranking should be treated as a draft opportunity scanner, not a final buy/craft recommendation.
+
+## Latest continuation update
+
+Added stored output sale price overrides and ranking cost-driver details.
+
+New CLI commands:
+
+    python -m poe_market_analyser.cli output-price-override-set <recipe_id> --league Mirage --sale-chaos <price> --db poe_market.db
+    python -m poe_market_analyser.cli output-price-override-list --league Mirage --db poe_market.db
+
+New ranking flag:
+
+    --show-cost-drivers
+
+Output price resolution priority is now CLI override > stored SQLite output override > YAML `pricing.output` > missing.
+
+Test count after this update: 42 passed.

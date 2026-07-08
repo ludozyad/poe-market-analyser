@@ -42,3 +42,12 @@ Next recommended implementation tasks:
 5. Add checkpoint-level expected cost and salvage modeling.
 
 When continuing, inspect `PROJECT_STATE.md`, `README.md`, `data/recipes`, and the test suite first.
+
+Recent update after GitHub push:
+- Verified repository is public at https://github.com/ludozyad/poe-market-analyser.
+- Added `OutputPriceOverride` support in SQLite so finished item prices can be adjusted without editing recipe YAML.
+- Added CLI commands `output-price-override-set` and `output-price-override-list`.
+- Ranking now stores `cost_driver_details` and CLI can print them with `--show-cost-drivers`.
+- Current tests: 42 passed.
+
+Continue from: implement checkpoint/salvage modelling or a first `OutputPriceProvider` abstraction that can later plug into trade search snapshots.

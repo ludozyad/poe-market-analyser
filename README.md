@@ -274,3 +274,24 @@ The recipe pack now contains six recipes. Two new draft research seeds were adde
 - `poe1_mirage_medium_cluster_flask_alt_regal_recipe.yaml`
 
 They are intentionally marked as draft and should be treated as data-pipeline seeds until exact output pricing and mod-weight simulation are implemented.
+
+## Output price overrides and cost drivers
+
+A recipe can still carry a draft `pricing.output` estimate, but the project now also supports stored output price overrides. This lets a user or a future trade-search provider update the finished item price without editing recipe YAML:
+
+    python -m poe_market_analyser.cli output-price-override-set poe1_mirage_fractured_spell_suppression_boots_essence --league Mirage --sale-chaos 1400 --confidence checked_trade_output --note "Checked comparable boots on trade" --db poe_market.db
+    python -m poe_market_analyser.cli output-price-override-list --league Mirage --db poe_market.db
+
+Ranking and single-recipe analysis resolve output price in this order:
+
+  1. explicit CLI sale price override,
+  2. stored output price override,
+  3. imported recipe `pricing.output`,
+  4. missing output price.
+
+Ranking can also show the largest cost drivers for each craft:
+
+    python -m poe_market_analyser.cli auto-rank --skip-import --league Mirage --db poe_market.db --show-cost-drivers
+    python -m poe_market_analyser.cli auto-rank --skip-import --league Mirage --db poe_market.db --show-problems --show-cost-drivers
+
+This is useful before adding checkpoint-level craft simulation because it quickly shows which ingredients dominate the current expected cost.

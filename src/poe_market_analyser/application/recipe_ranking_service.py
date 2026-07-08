@@ -32,6 +32,7 @@ class RecipeRankingRow:
     warning_count: int
     missing_price_details: tuple[str, ...]
     warning_details: tuple[str, ...]
+    cost_driver_details: tuple[str, ...]
     status: str
 
 
@@ -76,7 +77,12 @@ class RecipeRankingService:
                 if use_auto_success_assumption
                 else None
             )
-            output_price = resolve_output_price(recipe)
+            output_override = self.recipe_repository.find_output_price_override(
+                recipe_id=recipe.id,
+                league=target_league,
+                game=recipe.game,
+            )
+            output_price = resolve_output_price(recipe, stored_override=output_override)
             result = engine.calculate(
                 recipe=recipe,
                 price_book=price_book,
@@ -130,6 +136,7 @@ class RecipeRankingService:
                     warning_count=warning_count,
                     missing_price_details=missing_details,
                     warning_details=warning_details,
+                    cost_driver_details=_build_cost_driver_details(price_book),
                     status=_ranking_status(missing_count, warning_count, output_price.has_sale_price),
                 )
             )
@@ -202,4 +209,20 @@ def _build_warning_details(price_book) -> tuple[str, ...]:
     for entry in price_book.entries:
         for warning in entry.warnings:
             details.append(f"{entry.ingredient_id} [{entry.market_type}/{entry.matched_name}]: {warning}")
+    return tuple(details)
+
+
+def _build_cost_driver_details(price_book, limit: int = 5) -> tuple[str, ...]:
+    entries = sorted(
+        price_book.entries,
+        key=lambda entry: entry.total_price_chaos,
+        reverse=True,
+    )
+    details: list[str] = []
+    for entry in entries[:limit]:
+        details.append(
+            f"{entry.ingredient_id}: {entry.total_price_chaos:.4g} chaos "
+            f"({entry.quantity:g} x {entry.unit_price_chaos:.4g}; "
+            f"{entry.price_source}; {entry.market_type}/{entry.matched_name})"
+        )
     return tuple(details)

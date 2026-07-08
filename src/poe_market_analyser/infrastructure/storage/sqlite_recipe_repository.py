@@ -4,7 +4,9 @@ import json
 import sqlite3
 from pathlib import Path
 from typing import Any
+from datetime import UTC, datetime
 
+from poe_market_analyser.application.output_pricing import OutputPriceOverride
 from poe_market_analyser.domain.models import CraftingRecipe
 
 
@@ -40,6 +42,28 @@ class SqliteRecipeRepository:
                     PRIMARY KEY (recipe_id, ingredient_id),
                     FOREIGN KEY (recipe_id) REFERENCES crafting_recipes(recipe_id) ON DELETE CASCADE
                 )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS output_price_overrides (
+                    game TEXT NOT NULL,
+                    league TEXT NOT NULL,
+                    recipe_id TEXT NOT NULL,
+                    estimated_sale_price_chaos REAL NOT NULL,
+                    failed_resale_value_chaos REAL NOT NULL,
+                    confidence TEXT NOT NULL,
+                    source TEXT NOT NULL,
+                    note TEXT,
+                    updated_at_utc TEXT NOT NULL,
+                    PRIMARY KEY (game, league, recipe_id)
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_output_price_overrides_lookup
+                ON output_price_overrides (game, league, recipe_id)
                 """
             )
             connection.commit()
@@ -150,6 +174,88 @@ class SqliteRecipeRepository:
             return None
         return json.loads(row[0])
 
+
+    def save_output_price_override(self, override: OutputPriceOverride) -> None:
+        self.initialize()
+        updated_at = _format_dt(override.updated_at_utc)
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO output_price_overrides (
+                    game,
+                    league,
+                    recipe_id,
+                    estimated_sale_price_chaos,
+                    failed_resale_value_chaos,
+                    confidence,
+                    source,
+                    note,
+                    updated_at_utc
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(game, league, recipe_id) DO UPDATE SET
+                    estimated_sale_price_chaos = excluded.estimated_sale_price_chaos,
+                    failed_resale_value_chaos = excluded.failed_resale_value_chaos,
+                    confidence = excluded.confidence,
+                    source = excluded.source,
+                    note = excluded.note,
+                    updated_at_utc = excluded.updated_at_utc
+                """,
+                (
+                    override.game,
+                    override.league,
+                    override.recipe_id,
+                    override.estimated_sale_price_chaos,
+                    override.failed_resale_value_chaos,
+                    override.confidence,
+                    override.source,
+                    override.note,
+                    updated_at,
+                ),
+            )
+            connection.commit()
+
+    def find_output_price_override(
+        self,
+        recipe_id: str,
+        league: str,
+        game: str = "poe1",
+    ) -> OutputPriceOverride | None:
+        self.initialize()
+        with self._connect() as connection:
+            connection.row_factory = sqlite3.Row
+            row = connection.execute(
+                """
+                SELECT *
+                FROM output_price_overrides
+                WHERE game = ? AND league = ? AND recipe_id = ?
+                """,
+                (game, league, recipe_id),
+            ).fetchone()
+        if row is None:
+            return None
+        return _row_to_output_price_override(dict(row))
+
+    def list_output_price_overrides(
+        self,
+        league: str,
+        game: str = "poe1",
+        limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        self.initialize()
+        with self._connect() as connection:
+            connection.row_factory = sqlite3.Row
+            rows = connection.execute(
+                """
+                SELECT *
+                FROM output_price_overrides
+                WHERE game = ? AND league = ?
+                ORDER BY updated_at_utc DESC, recipe_id ASC
+                LIMIT ?
+                """,
+                (game, league, limit),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
     def _connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self.database_path)
 
@@ -234,3 +340,30 @@ def _recipe_to_jsonable_dict(recipe: CraftingRecipe) -> dict[str, Any]:
             **recipe.simulation.metadata,
         },
     }
+
+
+def _row_to_output_price_override(row: dict[str, Any]) -> OutputPriceOverride:
+    return OutputPriceOverride(
+        game=row["game"],
+        league=row["league"],
+        recipe_id=row["recipe_id"],
+        estimated_sale_price_chaos=float(row["estimated_sale_price_chaos"]),
+        failed_resale_value_chaos=float(row["failed_resale_value_chaos"]),
+        confidence=row["confidence"],
+        source=row["source"],
+        note=row["note"],
+        updated_at_utc=_parse_dt(row["updated_at_utc"]),
+    )
+
+
+def _format_dt(value: datetime) -> str:
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=UTC)
+    return value.astimezone(UTC).isoformat()
+
+
+def _parse_dt(value: str) -> datetime:
+    parsed = datetime.fromisoformat(value)
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)

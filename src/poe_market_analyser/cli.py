@@ -6,7 +6,7 @@ from pathlib import Path
 
 from poe_market_analyser.application.auto_analysis_service import AutoAnalysisService
 from poe_market_analyser.application.market_service import MarketDataService
-from poe_market_analyser.application.output_pricing import resolve_output_price
+from poe_market_analyser.application.output_pricing import OutputPriceOverride, resolve_output_price
 from poe_market_analyser.application.price_resolver import MarketPriceResolver
 from poe_market_analyser.application.profit_engine import SimpleExpectedValueProfitEngine
 from poe_market_analyser.application.recipe_market_requirements import summarize_market_requirements
@@ -84,6 +84,29 @@ def main() -> None:
     override_list_parser.add_argument("--game", default="poe1")
     override_list_parser.add_argument("--type", dest="item_type", default=None)
     override_list_parser.add_argument("--limit", type=int, default=50)
+
+    output_override_set_parser = subparsers.add_parser(
+        "output-price-override-set",
+        help="Save a recipe output sale price override without editing YAML.",
+    )
+    output_override_set_parser.add_argument("recipe_id")
+    output_override_set_parser.add_argument("--league", default="Mirage")
+    output_override_set_parser.add_argument("--db", type=Path, default=Path("poe_market.db"))
+    output_override_set_parser.add_argument("--game", default="poe1")
+    output_override_set_parser.add_argument("--sale-chaos", type=float, required=True)
+    output_override_set_parser.add_argument("--failed-resale-chaos", type=float, default=0.0)
+    output_override_set_parser.add_argument("--confidence", default="checked_trade_output")
+    output_override_set_parser.add_argument("--source", default="manual_override")
+    output_override_set_parser.add_argument("--note", default=None)
+
+    output_override_list_parser = subparsers.add_parser(
+        "output-price-override-list",
+        help="List saved output sale price overrides.",
+    )
+    output_override_list_parser.add_argument("--league", default="Mirage")
+    output_override_list_parser.add_argument("--db", type=Path, default=Path("poe_market.db"))
+    output_override_list_parser.add_argument("--game", default="poe1")
+    output_override_list_parser.add_argument("--limit", type=int, default=50)
 
     analyze_parser = subparsers.add_parser(
         "analyze-recipe",
@@ -247,6 +270,44 @@ def main() -> None:
             )
         return
 
+    if args.command == "output-price-override-set":
+        repository = SqliteRecipeRepository(args.db)
+        override = OutputPriceOverride(
+            game=args.game,
+            league=args.league,
+            recipe_id=args.recipe_id,
+            estimated_sale_price_chaos=args.sale_chaos,
+            failed_resale_value_chaos=args.failed_resale_chaos,
+            confidence=args.confidence,
+            source=args.source,
+            note=args.note,
+        )
+        repository.save_output_price_override(override)
+        print(
+            f"Saved output price override: {args.league}/{args.recipe_id} = "
+            f"{args.sale_chaos:.4g} chaos"
+        )
+        return
+
+    if args.command == "output-price-override-list":
+        repository = SqliteRecipeRepository(args.db)
+        rows = repository.list_output_price_overrides(
+            league=args.league,
+            game=args.game,
+            limit=args.limit,
+        )
+        if not rows:
+            print("No output price overrides stored yet.")
+            return
+        for row in rows:
+            note = "" if not row["note"] else f" | note: {row['note']}"
+            print(
+                f"{row['recipe_id']} | sale {row['estimated_sale_price_chaos']:.4g} chaos | "
+                f"failed resale {row['failed_resale_value_chaos']:.4g} chaos | "
+                f"source {row['source']} | confidence {row['confidence']}{note}"
+            )
+        return
+
     if args.command == "rank-recipes":
         service = RecipeRankingService(
             recipe_repository=SqliteRecipeRepository(args.db),
@@ -262,7 +323,7 @@ def main() -> None:
             min_confidence_score=args.min_confidence_score,
         )
         _maybe_export_ranking_csv(rows, args.export_csv)
-        _print_ranking_rows(rows, show_problems=args.show_problems)
+        _print_ranking_rows(rows, show_problems=args.show_problems, show_cost_drivers=args.show_cost_drivers)
         return
 
     if args.command == "auto-rank":
@@ -289,7 +350,7 @@ def main() -> None:
             print(f"Refreshed market types: {', '.join(result.refreshed_market_types) or 'none'}")
             _print_fetch_summaries(result.fetch_summaries)
         _maybe_export_ranking_csv(result.ranking_rows, args.export_csv)
-        _print_ranking_rows(result.ranking_rows, show_problems=args.show_problems)
+        _print_ranking_rows(result.ranking_rows, show_problems=args.show_problems, show_cost_drivers=args.show_cost_drivers)
         return
 
     if args.command == "analyze-recipe":
@@ -337,10 +398,16 @@ def main() -> None:
                     location = f" [{missing.market_type or '?'} / {missing.market_name or '?'}]"
                 print(f"- {missing.ingredient_id}{location}: {missing.reason}")
 
+        output_override = recipe_repository.find_output_price_override(
+            recipe_id=recipe.id,
+            league=league,
+            game=recipe.game,
+        )
         output_price = resolve_output_price(
             recipe,
             sale_price_override_chaos=args.sale_price_chaos,
             failed_resale_override_chaos=args.failed_resale_chaos,
+            stored_override=output_override,
         )
         result = SimpleExpectedValueProfitEngine().calculate(
             recipe=recipe,
@@ -395,6 +462,11 @@ def _add_ranking_arguments(parser: argparse.ArgumentParser) -> None:
         help="Print missing price and warning details under each ranking row.",
     )
     parser.add_argument(
+        "--show-cost-drivers",
+        action="store_true",
+        help="Print the top ingredient costs under each ranking row.",
+    )
+    parser.add_argument(
         "--export-csv",
         type=Path,
         default=None,
@@ -413,7 +485,11 @@ def _print_fetch_summaries(summaries) -> None:
         )
 
 
-def _print_ranking_rows(rows: tuple[RecipeRankingRow, ...], show_problems: bool = False) -> None:
+def _print_ranking_rows(
+    rows: tuple[RecipeRankingRow, ...],
+    show_problems: bool = False,
+    show_cost_drivers: bool = False,
+) -> None:
     if not rows:
         print("No recipes matched the ranking filters.")
         return
@@ -440,6 +516,9 @@ def _print_ranking_rows(rows: tuple[RecipeRankingRow, ...], show_problems: bool 
                 print(f"  missing: {detail}")
             for detail in row.warning_details:
                 print(f"  warning: {detail}")
+        if show_cost_drivers:
+            for detail in row.cost_driver_details:
+                print(f"  cost: {detail}")
 
 
 def _maybe_export_ranking_csv(rows: tuple[RecipeRankingRow, ...], export_path: Path | None) -> None:
@@ -468,6 +547,7 @@ def _maybe_export_ranking_csv(rows: tuple[RecipeRankingRow, ...], export_path: P
                 "warning_count",
                 "missing_price_details",
                 "warning_details",
+                "cost_driver_details",
             ],
         )
         writer.writeheader()
@@ -492,6 +572,7 @@ def _maybe_export_ranking_csv(rows: tuple[RecipeRankingRow, ...], export_path: P
                     "warning_count": row.warning_count,
                     "missing_price_details": " | ".join(row.missing_price_details),
                     "warning_details": " | ".join(row.warning_details),
+                    "cost_driver_details": " | ".join(row.cost_driver_details),
                 }
             )
     print(f"Exported ranking CSV: {export_path}")
