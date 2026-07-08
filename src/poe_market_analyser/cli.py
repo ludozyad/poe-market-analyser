@@ -12,8 +12,10 @@ from poe_market_analyser.application.profit_engine import SimpleExpectedValuePro
 from poe_market_analyser.application.recipe_market_requirements import summarize_market_requirements
 from poe_market_analyser.application.recipe_ranking_service import RecipeRankingRow, RecipeRankingService
 from poe_market_analyser.application.recipe_service import RecipeImportService
+from poe_market_analyser.application.trade_price_estimator import TradePriceEstimator, TradePriceEstimatorConfig
 from poe_market_analyser.domain.market import ManualPriceOverride
 from poe_market_analyser.infrastructure.market.poe_ninja_provider import PoeNinjaProvider
+from poe_market_analyser.infrastructure.trade.poe_trade_provider import PoeTradeProvider, PoeTradeProviderError
 from poe_market_analyser.infrastructure.storage.sqlite_market_repository import SqliteMarketRepository
 from poe_market_analyser.infrastructure.storage.sqlite_recipe_repository import SqliteRecipeRepository
 
@@ -107,6 +109,23 @@ def main() -> None:
     output_override_list_parser.add_argument("--db", type=Path, default=Path("poe_market.db"))
     output_override_list_parser.add_argument("--game", default="poe1")
     output_override_list_parser.add_argument("--limit", type=int, default=50)
+
+
+    trade_estimate_parser = subparsers.add_parser(
+        "trade-price-estimate",
+        help="Estimate a recipe output sale price from pathofexile.com trade listings.",
+    )
+    trade_estimate_parser.add_argument("recipe_id")
+    trade_estimate_parser.add_argument("--league", default="Mirage")
+    trade_estimate_parser.add_argument("--db", type=Path, default=Path("poe_market.db"))
+    trade_estimate_parser.add_argument("--max-results", type=int, default=20)
+    trade_estimate_parser.add_argument("--sample-size", type=int, default=5)
+    trade_estimate_parser.add_argument("--include-offline", action="store_true")
+    trade_estimate_parser.add_argument(
+        "--save-output-override",
+        action="store_true",
+        help="Save the estimated sale price as an output-price override used by ranking.",
+    )
 
     analyze_parser = subparsers.add_parser(
         "analyze-recipe",
@@ -306,6 +325,55 @@ def main() -> None:
                 f"failed resale {row['failed_resale_value_chaos']:.4g} chaos | "
                 f"source {row['source']} | confidence {row['confidence']}{note}"
             )
+        return
+
+
+    if args.command == "trade-price-estimate":
+        recipe_repository = SqliteRecipeRepository(args.db)
+        recipe = RecipeImportService(recipe_repository).load_recipe(args.recipe_id)
+        if recipe is None:
+            print(f"Recipe not found in database: {args.recipe_id}")
+            print("Import recipes first with import/import-dir/auto-rank.")
+            return
+
+        estimator = TradePriceEstimator(
+            provider=PoeTradeProvider(),
+            market_repository=SqliteMarketRepository(args.db),
+            game=recipe.game,
+        )
+        try:
+            estimate = estimator.estimate_recipe_output(
+                recipe=recipe,
+                league=args.league,
+                config=TradePriceEstimatorConfig(
+                    max_results=args.max_results,
+                    sample_size=args.sample_size,
+                    online_only=not args.include_offline,
+                ),
+            )
+        except PoeTradeProviderError as error:
+            print(f"Trade price estimation failed: {error}")
+            return
+
+        sale = "missing" if estimate.estimated_sale_price_chaos is None else f"{estimate.estimated_sale_price_chaos:.4g} chaos"
+        print(f"Trade price estimate for {recipe.name} ({recipe.id})")
+        print(f"League: {args.league}")
+        print(f"Search: {estimate.search_url or 'missing'}")
+        print(f"Estimated sale price: {sale}")
+        print(
+            f"Listings: used {estimate.used_listing_count}, total {estimate.total_result_count}, "
+            f"skipped {estimate.skipped_listing_count}"
+        )
+        if estimate.listing_prices_chaos:
+            print("Sample prices: " + ", ".join(f"{value:.4g}c" for value in estimate.listing_prices_chaos))
+        print(f"Confidence: {estimate.confidence}")
+        if estimate.note:
+            print(f"Note: {estimate.note}")
+        if args.save_output_override and estimate.estimated_sale_price_chaos is not None:
+            recipe_repository.save_output_price_override(estimator.build_output_override(estimate))
+            print("Saved output price override from trade estimate.")
+        elif args.save_output_override:
+            print("Output override not saved because estimated sale price is missing.")
         return
 
     if args.command == "rank-recipes":

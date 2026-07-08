@@ -135,3 +135,35 @@ New ranking flag:
 Output price resolution priority is now CLI override > stored SQLite output override > YAML `pricing.output` > missing.
 
 Test count after this update: 42 passed.
+
+## Latest iteration: experimental trade output pricing
+
+Added an isolated `PoeTradeProvider` adapter for pathofexile.com trade search/fetch endpoints, plus `TradePriceEstimator` and `trade-price-estimate` CLI.
+
+New modules:
+
+- `domain/trade.py`
+- `application/trade_query_builder.py`
+- `application/trade_price_estimator.py`
+- `infrastructure/trade/poe_trade_provider.py`
+
+New command:
+
+```powershell
+python -m poe_market_analyser.cli trade-price-estimate <recipe_id> --league Mirage --db poe_market.db --max-results 20 --sample-size 5 --save-output-override
+```
+
+Current behavior:
+
+1. Loads recipe from SQLite.
+2. Builds trade query from `pricing.output.trade_search.query`, or generates a broad fallback query from target base/influence/corruption/item level.
+3. Searches pathofexile.com trade and fetches listings.
+4. Converts listing currencies to chaos using local poe.ninja `Currency` cache.
+5. Uses the median of the cheapest converted sample as output estimate.
+6. Optionally stores it as an output-price override for ranking.
+
+Known limitations:
+
+- Exact rare pricing is only reliable once recipes contain trade stat ids or explicit `pricing.output.trade_search.query` JSON.
+- Generated fallback queries are useful for smoke tests and base comparable pricing, not final profit decisions for complex rare outputs.
+- The trade endpoint is isolated as an adapter because it can change and may be rate-limited.

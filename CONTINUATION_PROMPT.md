@@ -51,3 +51,20 @@ Recent update after GitHub push:
 - Current tests: 42 passed.
 
 Continue from: implement checkpoint/salvage modelling or a first `OutputPriceProvider` abstraction that can later plug into trade search snapshots.
+
+Recent progress after GitHub push:
+
+- Added experimental PoE trade output pricing.
+- Added `PoeTradeProvider` for trade search/fetch.
+- Added `TradePriceEstimator` with chaos conversion via local Currency cache.
+- Added `trade-price-estimate` CLI, with optional `--save-output-override`.
+- Added tests for query builder, provider HTTP mapping, estimator/currency conversion.
+- Test count is now `46 passed`.
+
+Next recommended steps:
+
+1. Add `pricing.output.trade_search.query` blocks to selected recipes.
+2. Add/collect Path of Exile trade `stat_id` mappings for target mods.
+3. Add a command to print generated trade query JSON for debugging.
+4. Add rate-limit handling/backoff for live trade endpoint.
+5. Add snapshot storage for trade estimate history instead of only overwriting output override.

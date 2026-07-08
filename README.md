@@ -295,3 +295,24 @@ Ranking can also show the largest cost drivers for each craft:
     python -m poe_market_analyser.cli auto-rank --skip-import --league Mirage --db poe_market.db --show-problems --show-cost-drivers
 
 This is useful before adding checkpoint-level craft simulation because it quickly shows which ingredients dominate the current expected cost.
+
+## Trade output price estimation
+
+The project now has an experimental PoE trade output-pricing path for rare and unique crafted outputs.
+
+```powershell
+python -m poe_market_analyser.cli trade-price-estimate poe1_mirage_fractured_spell_suppression_boots_essence --league Mirage --db poe_market.db --max-results 20 --sample-size 5
+```
+
+To save the result as the recipe output price used by ranking:
+
+```powershell
+python -m poe_market_analyser.cli trade-price-estimate poe1_mirage_fractured_spell_suppression_boots_essence --league Mirage --db poe_market.db --max-results 20 --sample-size 5 --save-output-override
+```
+
+Important limitations:
+
+- If a recipe contains `pricing.output.trade_search.query`, that exact JSON query is sent to the trade endpoint.
+- If no query is configured, the app builds a broad fallback query from the target base, item class, item level, corruption and influence fields.
+- Exact rare-item pricing needs `stat_id` values in recipe target mods or a handcrafted `trade_search.query` block.
+- Trade listing prices are converted to chaos using the local `Currency` cache, so run `auto-rank` or `market-fetch --types Currency` first.
